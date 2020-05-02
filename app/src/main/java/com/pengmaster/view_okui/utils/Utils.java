@@ -34,4 +34,8 @@ public class Utils {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
                 Resources.getSystem().getDisplayMetrics());
     }
+
+    public static float getCameraZLocation(){
+        return -8 * Resources.getSystem().getDisplayMetrics().density;
+    }
 }
