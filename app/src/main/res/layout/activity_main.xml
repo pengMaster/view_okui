@@ -6,61 +6,137 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-<!--    <com.pengmaster.view_okui.view.AvatarView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Hello World!"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
+    <!--    <com.pengmaster.view_okui.view.AvatarView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Hello World!"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />-->
 
-<!--    <com.pengmaster.view_okui.view.SportsView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Hello World!"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />   -->
+    <!--    <com.pengmaster.view_okui.view.SportsView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Hello World!"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />   -->
 
-<!--    <com.pengmaster.view_okui.view.ImageTextView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Hello World!"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />    -->
+    <!--    <com.pengmaster.view_okui.view.ImageTextView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Hello World!"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />    -->
 
-<!--    <com.pengmaster.view_okui.view.CameraView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Hello World!"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />   -->
+    <!--    <com.pengmaster.view_okui.view.CameraView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Hello World!"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />   -->
 
-<!--    <com.pengmaster.view_okui.view.CameraAnimationView-->
-<!--        android:id="@+id/cameraView"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Hello World!"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
+    <!--    <com.pengmaster.view_okui.view.CameraAnimationView-->
+    <!--        android:id="@+id/cameraView"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Hello World!"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />-->
 
 
-    <com.pengmaster.view_okui.view.KeyframeAnimationView
-        android:id="@+id/cameraView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <!--    <com.pengmaster.view_okui.view.KeyframeAnimationView-->
+    <!--        android:id="@+id/cameraView"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Hello World!"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />-->
 
+    <!--    <com.pengmaster.view_okui.view.MaterialEditTextView-->
+    <!--        android:id="@+id/view"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:hint="hint"-->
+    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+    <!--    <com.pengmaster.view_okui.view.CircleView-->
+    <!--        android:layout_width="200dp"-->
+    <!--        android:layout_height="300dp"-->
+    <!--        android:scaleType="centerCrop"-->
+    <!--        tools:ignore="MissingConstraints"-->
+    <!--        android:src="@drawable/avatar"/>-->
+
+    <com.pengmaster.view_okui.view.TagLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="北京市" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="天津市" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="上海市" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="重庆市" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="河北省" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="山西省" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="辽宁省" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="重庆市" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="河北省" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="山西省" />
+
+        <com.pengmaster.view_okui.view.ColoredTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="辽宁省" />
+    </com.pengmaster.view_okui.view.TagLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

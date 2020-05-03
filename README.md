@@ -240,3 +240,30 @@ addXxxListener() 来设置监听器。
 分绘制要⽤离屏缓冲
         - 然⽽……最新的⽂档表示这个⽅法太重了，能不⽤就别⽤，尽量⽤ setLayerType() 代
 替
+
+
+### 自定义viewGroup TagLayout
+
+#### 方法解析
+> 讲义：⾃定义布局
+- draw measure 总调度，不实际做事
+- onDraw  onMeasure 实际做事
+- layout 实际做事，把自己尺寸保存起来
+- onLayout 对子View进行布局，调子View layout方法
+- setMeasureDimension() 会把新的尺寸存起来，父View以及子View都可以拿到新的尺寸，如果在layout中直接修改自己的尺寸和位置，父View拿不到自己改的尺寸，会出问题，因为layout在最后一步。
+- resolveSize() 或者 resolveSizeAndState() 修正结果
+>  需要比对 EXACTLY，AT_MOST， UNSPECIFIED。另外resolveSizeAndState中的state 中多传入的值是为了帮助修正，子View的要求父View无法满足时，可以通过state看到偏差，现在基本废弃。
+#### viewGroup自定义
+- 重写 onMeasure()，遍历每个⼦ View，⽤ measureChildWidthMargins() 测量⼦ View
+> 需要重写 generateLayoutParams() 并返回 MarginLayoutParams 才能使⽤
+measureChildWithMargins() ⽅法
+- measureChildWidthMargins() 的内部实现（最好读⼀下代码，这个极少需要⾃
+⼰写，但⾯试时很多时候会考）
+> 通过 ==getChildMeasureSpec==(int spec, int padding, int childDimension) ⽅
+法计算出⼦ View 的 widthMeasureSpec 和 heightMeasureSpec，然后调
+⽤ child.measure() ⽅法来让⼦ View ⾃我测量
+- getChildMeasureSpec()
+> getChildMeasureSpec(int spec, int padding, int childDimension) ⽅法的内部
+实现是，结合开发者设置的 LayoutParams 中的 width 和 height 与⽗ View ⾃
+⼰的剩余可⽤空间，综合得出⼦ View 的尺⼨限制，并使⽤
+MeasureSpec.makeMeasureSpec(size, mode) 来求得结果
