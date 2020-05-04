@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import androidx.annotation.Nullable;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 
 
 import com.pengmaster.view_okui.utils.Utils;
@@ -49,4 +50,5 @@ public class ColoredTextView extends androidx.appcompat.widget.AppCompatTextView
         canvas.drawRoundRect(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS, paint);
         super.onDraw(canvas);
     }
+
 }

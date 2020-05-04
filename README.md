@@ -267,3 +267,44 @@ measureChildWithMargins() ⽅法
 实现是，结合开发者设置的 LayoutParams 中的 width 和 height 与⽗ View ⾃
 ⼰的剩余可⽤空间，综合得出⼦ View 的尺⼨限制，并使⽤
 MeasureSpec.makeMeasureSpec(size, mode) 来求得结果
+
+
+### view的触摸反馈机制
+> 讲义：触摸反馈基础
+- 事件序列 down开始cancel结束
+- getActionMasked()支持多点触控 和 getAction()不支持
+- 安卓相比较苹果==卡顿原因之一==：Layout自定义时，默认包含在内的子View按下都是有延时的，只要不是滑动控件，重写==shouldDeleyChildPressedState返回false==可以关闭预按下延时（==100毫秒==）
+- Activity(dispatchTouchEvent) -> ViewGroup(dispatchTouchEvent) -> View(dispatchTouchEvent)
+> 在==dispatchTouchEvent 中分发interceptTouchEvent 和onTouchEvent==，如果interceptTouchEvent拦截，会通过dispatchTouchEvent再倒叙传递给上级，通知他们结果
+- View（OnTouchEvent）-> ViewGroup(OnTouchEvent) -> Activity(OnTouchEvent)
+- parent.requestDisallowInterceptTouchEvent() 调用后父View在当前事件序列中就不会拦截子View了
+> ViewPager中嵌套ScrollView使用的策略
+- GestureDetector 辅助工具
+
+##### view.dispatchTouchEvent
+- 如果设置了 OnTouchListener，调⽤OnTouchListener.onTouch()
+    - 如果 OnTouchListener 消费了事件，返回 true
+    - 如果 OnTouchListener 没有消费事件，继续调⽤⾃⼰的 onTouchEvent()，并返回和
+onTouchEvent() 相同的结果
+- 如果没有设置 OnTouchListener，同上
+viewGroup.dispatchTouchEvent
+> 较为复杂，看印象笔记
+
+##### View.onTouchEvent()
+> 印象笔记和讲义，重点
+
+### 多点触控
+> desc：View中两个列表互不影响的各自滑动
+- ==TouchTarget==
+    - 作⽤：记录每个⼦ View 是被哪些 pointer（⼿指）按下的
+    - 结构：单向链表
+
+### 图片缩放 ScalableImageView
+- canvas缩放可以达到内部图形的缩放
+- GestureDetector和GestureDetectorCompat比较，带有compat的一般为兼容包，放在support中支持低版本
+> 多个回掉方法见讲义
+- OverScroller和Scroller区别
+    - Scroller滑动速度特别快的时候，图形惯性滑动的仍然特别慢
+    - 两者的作用都是做惯性滑动的辅助工具。
+    - OverScroller使用填入起始点位置，速度，边界的4个坐标
+    - postOnAnimation 每帧都会执行，辅助onfling完成自动动画执行
