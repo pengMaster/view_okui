@@ -268,7 +268,6 @@ measureChildWithMargins() ⽅法
 ⼰的剩余可⽤空间，综合得出⼦ View 的尺⼨限制，并使⽤
 MeasureSpec.makeMeasureSpec(size, mode) 来求得结果
 
-
 ### view的触摸反馈机制
 > 讲义：触摸反馈基础
 - 事件序列 down开始cancel结束
@@ -298,13 +297,62 @@ viewGroup.dispatchTouchEvent
 - ==TouchTarget==
     - 作⽤：记录每个⼦ View 是被哪些 pointer（⼿指）按下的
     - 结构：单向链表
+- ACTION_DOWN,ACTION_POINTER_DOWN 坐标:p(x,y,index,id),p(x,y,index,id)
+    - 用getX()取得坐标是index=0的坐标，并不是哪个手指滑动取哪个
+- ==多指index变换，id复用原则==
+    - index变换1:两个手指0，1，index为0的手指抬起，index为1的手指idnex会变成0，但是id仍然为1
+    - index变换2:三个手指0，1，2，index为1的手指抬起，index为2的手指idnex会变成1，但是id仍然2
+    - id复用原则: 当又有新的手指按下，会将id=0重新赋值给新的手指
+> index永远是连续的，多指滑动根据id追踪
+- 多点触控的三种类型
+- - 接⼒型 MultiTouchRelayView
+    > 同⼀时刻只有⼀个 pointer 起作⽤，即最新的 pointer。 典型：ListView、
+RecyclerView。 实现⽅式：在 ACTION_POINTER_DOWN 和 ACTION_POINTER_UP 时记
+录下最新的 pointer，在之后的 ACTION_MOVE 事件中使⽤这个 pointer 来判断位置。
+- - 配合型 / 协作型 MultiTouchTogetherView
+    > 所有触摸到 View 的 pointer 共同起作⽤。
+典型：ScaleGestureDetector，以及 GestureDetector 的 onScroll() ⽅法判断。 实现⽅
+式：在每个 DOWN、POINTER_DOWN、POINTER_UP、UP 事件中使⽤所有 pointer 的坐
+标来共同更新焦点坐标，并在 MOVE 事件中使⽤所有 pointer 的坐标来判断位置。
+- -  例子：MultiTouchTogetherView
+        - MotionEvent.ACTION_POINTER_UP://当第二个手指抬起的时候，只有到MOVE的的时候才实际会少一根手指
+        - 计算中心点的时候如果是ACTION_POINTER_UP要去除掉这个点
+- - 各⾃为战型
+    > 各个 pointer 做不同的事，互不影响。 典型：⽀持多画笔的画板应⽤。 实现⽅
+式：在每个 DOWN、POINTER_DOWN 事件中记录下每个 pointer 的 id，在 MOVE 事件中
+使⽤ id 对它们进⾏跟踪
+- - 例子：画板 MultiTouchDrawBoardView
+    - 点移动 path.moveTo
+    - 添加线 path.lineTo
+    - paint.setStrokeJoin 拐角圆滑
 
-### 图片缩放 ScalableImageView
+### 图片缩放 触摸反馈辅助工具 ScalableImageView
 - canvas缩放可以达到内部图形的缩放
-- GestureDetector和GestureDetectorCompat比较，带有compat的一般为兼容包，放在support中支持低版本
+- ==GestureDetector==和GestureDetectorCompat比较，带有compat的一般为兼容包，放在support中支持低版本
 > 多个回掉方法见讲义
-- OverScroller和Scroller区别
+- ==OverScroller==和Scroller区别 ==做惯性滑动用==
     - Scroller滑动速度特别快的时候，图形惯性滑动的仍然特别慢
     - 两者的作用都是做惯性滑动的辅助工具。
     - OverScroller使用填入起始点位置，速度，边界的4个坐标
     - postOnAnimation 每帧都会执行，辅助onfling完成自动动画执行
+- ==ScaleGestureDetector== 双指捏撑监听器
+    - onScale中getScaleFactor返回两个手指之间的比例
+
+### ViewPager
+> 讲义：手写 ViewPager，以及 Android 中的拖拽操作
+- scrollTo 反向移动，正值向左边移动
+- ==postInvalidateOnAnimation==与postOnAnimation区别
+    - 自动调用invalidate
+    - 自动回调computeScroll
+- getScrollX() 获取划出屏幕View大小
+- overScroll.startScroll() 并不会真正移动View，需要自己移动，需要搭配上面两条一起使用
+- ==VelocityTracker== 速度计算器，看讲义
+- ==与子View确定谁抢占事件条件==
+    - onInterceptTouchEvent()确认滑动的⽅式：Math.abs(event.getX() - downX) > ViewConfiguration.getXxxSlop()
+    - 告知⼦ View 的⽅式：在 onInterceptTouchEvent() 中返回 true，⼦ View 会收到
+ACTION_CANCEL 事件，并且后续事件不再发给⼦ View
+    - 告知⽗ View 的⽅式：调⽤ getParent().requestDisallowInterceptTouchEvent(true) 。这
+个⽅法会递归通知每⼀级⽗ View，让他们在后续事件中不要再尝试通过
+onInterceptTouchEvent() 拦截事件。这个通知仅在当前事件序列有效，即在这组事件结束
+后（即⽤户抬⼿后），⽗ View 会⾃动对后续的新事件序列启⽤拦截机制
+- ==ViewConfiguration== 取一些手机设置的默认配置，例如：惯性滑动最大，最小速度

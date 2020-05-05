@@ -79,71 +79,162 @@
     <!--        tools:ignore="MissingConstraints"-->
     <!--        android:src="@drawable/avatar"/>-->
 
-<!--    <com.pengmaster.view_okui.view.TagLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent">-->
+    <!--    <com.pengmaster.view_okui.view.TagLayout-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent">-->
 
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="北京市" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="北京市" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="天津市" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="天津市" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="上海市" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="上海市" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="重庆市" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="重庆市" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="河北省" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="河北省" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="山西省" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="山西省" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="辽宁省" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="辽宁省" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="重庆市" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="重庆市" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="河北省" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="河北省" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="山西省" />-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="山西省" />-->
 
-<!--        <com.pengmaster.view_okui.view.ColoredTextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="辽宁省" />-->
-<!--    </com.pengmaster.view_okui.view.TagLayout>-->
+    <!--        <com.pengmaster.view_okui.view.ColoredTextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:text="辽宁省" />-->
+    <!--    </com.pengmaster.view_okui.view.TagLayout>-->
 
-    <com.pengmaster.view_okui.view.ScalableImageView2
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:ignore="MissingConstraints" />
+    <!--    <com.pengmaster.view_okui.view.ScalableImageView2-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        tools:ignore="MissingConstraints" />-->
 
 
+    <!--    <com.pengmaster.view_okui.view.MultiTouchSingleFingerView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        tools:ignore="MissingConstraints" />-->
+
+    <!--    <com.pengmaster.view_okui.view.MultiTouchRelayView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        tools:ignore="MissingConstraints" />   -->
+
+    <!--    <com.pengmaster.view_okui.view.MultiTouchTogetherView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        tools:ignore="MissingConstraints" />-->
+
+    <!--    <com.pengmaster.view_okui.view.MultiTouchDrawBoardView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        tools:ignore="MissingConstraints" />-->
+
+    <com.pengmaster.view_okui.view.ViewPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:ignore="MissingConstraints">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorAccent" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorPrimaryDark" />
+
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorAccent" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorPrimaryDark" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorAccent" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorPrimaryDark" />
+
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorAccent" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@color/colorPrimaryDark" />
+
+            </LinearLayout>
+        </ScrollView>
+    </com.pengmaster.view_okui.view.ViewPager>
 </androidx.constraintlayout.widget.ConstraintLayout>
