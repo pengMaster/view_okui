@@ -1,3 +1,4 @@
+### 自定义View进阶难点解析
 ### 应用场景：高级UI绘制 - 镂空
 
 - 1.Paint.ANTI_ALIAS_FLAG 设置抗锯齿
@@ -91,6 +92,8 @@ Canvas 的变换⽅法多次调⽤的时候，由于 Canvas 的坐标系会整�
 密度越⾼的⼿机，相当于 Camera 距离 View 越近，所以最好把这个值写成与机器的 density 成正⽐
 的⼀个负值，例如 -6 * density
 > ==三维图形的适配==：setLocation(x:0,y:0,z:-8) ,-8的单位是英寸，是openGL中sky的东西，1英寸=72像素，使用 ==-8*getResources().getDisplayMetrics().density== 来动态适配。
+
+---
 
 ## 属性动画和硬件加速
 ### 属性动画
@@ -241,6 +244,7 @@ addXxxListener() 来设置监听器。
         - 然⽽……最新的⽂档表示这个⽅法太重了，能不⽤就别⽤，尽量⽤ setLayerType() 代
 替
 
+---
 
 ### 自定义viewGroup TagLayout
 
@@ -267,6 +271,8 @@ measureChildWithMargins() ⽅法
 实现是，结合开发者设置的 LayoutParams 中的 width 和 height 与⽗ View ⾃
 ⼰的剩余可⽤空间，综合得出⼦ View 的尺⼨限制，并使⽤
 MeasureSpec.makeMeasureSpec(size, mode) 来求得结果
+
+
 
 ### view的触摸反馈机制
 > 讲义：触摸反馈基础
