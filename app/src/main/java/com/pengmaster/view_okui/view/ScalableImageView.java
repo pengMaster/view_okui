@@ -69,7 +69,8 @@ public class ScalableImageView extends View implements GestureDetector.OnGesture
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.translate(transOffsetX, transOffsetY);
+        canvas.translate(transOffsetX * fraction, transOffsetY * fraction);
+
         canvas.scale(scale + (scale * fraction), scale + (scale * fraction), getWidth() / 2, getHeight() / 2);
         canvas.drawBitmap(bitmap, offsetX, offsetY, paint);
 
@@ -91,6 +92,10 @@ public class ScalableImageView extends View implements GestureDetector.OnGesture
         if (isBig) {
             getAnimator().reverse();
         } else {
+            //点击什么地方，以什么地方为圆心进行缩放
+            transOffsetX = (e.getX() - getWidth() / 2f) - (e.getX() - getWidth() / 2f) * 2;
+            transOffsetY = (e.getY() - getHeight() / 2f) - (e.getY() - getHeight() / 2f) * 2;
+            fixOffsets();
             getAnimator().start();
         }
         isBig = !isBig;
@@ -122,15 +127,19 @@ public class ScalableImageView extends View implements GestureDetector.OnGesture
         if (isBig) {
             transOffsetX -= distanceX;
             transOffsetY -= distanceY;
-            //边界修正 不能划出边界
-            //例如：左滑只能滑动图片超出屏幕的部分
-            transOffsetX = Math.min(transOffsetX, (bitmap.getWidth() * 2 - getWidth()) / 2);
-            transOffsetX = Math.max(transOffsetX, -(bitmap.getWidth() * 2 - getWidth()) / 2);
-            transOffsetY = Math.min(transOffsetY, (bitmap.getHeight() * 2 - getHeight()) / 2);
-            transOffsetY = Math.max(transOffsetY, -(bitmap.getHeight() * 2 - getHeight()) / 2);
+            fixOffsets();
             invalidate();
         }
         return false;
+    }
+
+    private void  fixOffsets (){
+        //边界修正 不能划出边界
+        //例如：左滑只能滑动图片超出屏幕的部分
+        transOffsetX = Math.min(transOffsetX, (bitmap.getWidth() * 2 - getWidth()) / 2);
+        transOffsetX = Math.max(transOffsetX, -(bitmap.getWidth() * 2 - getWidth()) / 2);
+        transOffsetY = Math.min(transOffsetY, (bitmap.getHeight() * 2 - getHeight()) / 2);
+        transOffsetY = Math.max(transOffsetY, -(bitmap.getHeight() * 2 - getHeight()) / 2);
     }
 
     @Override

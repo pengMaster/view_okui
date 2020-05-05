@@ -140,7 +140,7 @@
 <!--            android:text="辽宁省" />-->
 <!--    </com.pengmaster.view_okui.view.TagLayout>-->
 
-    <com.pengmaster.view_okui.view.ScalableImageView
+    <com.pengmaster.view_okui.view.ScalableImageView2
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:ignore="MissingConstraints" />
