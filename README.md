@@ -362,3 +362,268 @@ ACTION_CANCEL 事件，并且后续事件不再发给⼦ View
 onInterceptTouchEvent() 拦截事件。这个通知仅在当前事件序列有效，即在这组事件结束
 后（即⽤户抬⼿后），⽗ View 会⾃动对后续的新事件序列启⽤拦截机制
 - ==ViewConfiguration== 取一些手机设置的默认配置，例如：惯性滑动最大，最小速度
+
+
+---
+
+### 拖拽和嵌套滑动
+- OnDragListener 拖动卸载/图片拖进微信
+    - API 11 加⼊的⼯具类，⽤于拖拽操作。
+    - 使⽤场景：⽤户的「拖起 -> 放下」操作，重在内容的移动。==可以附加拖拽数据==
+    - 不需要写⾃定义 View，使⽤ startDrag() / startDragAndDrop() （==可以跨进程==）⼿动开启拖拽
+    - ==拖拽的原理==是创造出⼀个图像在屏幕的最上层，⽤户的⼿指拖着图像移动
+- ViewDragHelper 策划栏 drawLayout ==DragUpDownLayout==
+    - 2015 年的 support v4包中新增的⼯具类，⽤于拖拽操作。
+    - 使⽤场景：⽤户拖动 ViewGroup 中的某个⼦ View
+    - 需要应⽤在⾃定义 ViewGroup 中调⽤ ViewDragHelper.shouldInterceptTouchEvent() 和
+processTouchEvent()，程序会⾃动开启拖拽
+    - 拖拽的原理是实时修改被拖拽的⼦ View 的 mLeft, mTop, mRight, mBottom 值
+    - ==例子DragUpDownLayout==
+        - viewDragHelper.settleCapturedViewAt 是要放置的位置，不是偏移量
+
+### 嵌套滑动
+#### 嵌套滑动的场景
+- 不同向嵌套
+> onInterceptTouchEvent ⽗ View 拦截
+> requestDisallowInterceptTouchEvent() ⼦ View 阻⽌⽗ View 拦截
+- 同向嵌套
+> ⽗ View 会彻底卡住⼦ View
+-    - 原因：抢夺条件⼀致，但 ⽗ View 的 onInterceptTouchEvent() 早于⼦ View 的
+dispatchTouchEvent()
+- 本质上是策略问题：嵌套状态下⽤户⼿指滑动，他是想滑谁？
+    - 场景⼀：==NestedScrollView==
+        - ⼦ View 能滑动的时候，滑⼦ View；滑不动的时候，滑⽗ View
+    -  场景⼆：Google 的样例 ==CoordinatorLayout==
+        - ⽗ View 展开的时候：
+            - 上滑：优先滑⽗ View
+            - 下滑：滑不动（所以可以说还是优先滑⽗ View）
+        - ⽗ View 半展开的时候：
+            - 向上：优先滑⽗ View，滑到⽗ View 完全收⻬之后开始滑⼦ View
+            - 向下：滑⽗ View，滑到⽗ View 完全展开之后开始滑⼦ View
+        - ⽗ View 收起的时候：
+            - 上滑：滑⼦ View（所以可以说是优先滑⼦ View）
+            - 下滑：优先滑⼦ View，滑到⼦ View 顶部的时候开始滑⽗ View
+- 解决⽅案：实现策略——⽗ View、⼦ View 谁来消费事件可以实时协商
+- 自己实现，子View滑完，父View再滑 ==NestedScrollingChildHelper==
+    - 实现NestedScrollingChild2接口，重写方法
+    - NestedScrollingChildHelper辅助类接管重写方法的方法
+    - Helper.setNestedScrollingEnabled(true);
+    - scrollingChildHelper.dispatchNestedScroll(0, 0, 0, unconsumed, null);
+> dispatchNestedScroll优先子View消耗，dispatchNestedPreScroll优先父View消耗
+
+---
+### 多线程和线程同步
+### Java 回收策略
+> 没有被 GC Root 直接或间接持有引⽤的对象，会被回收
+- ==GC Root==：
+    - 1. 运⾏中的线程
+    - 2. 静态对象
+    - 3. 来⾃ native code 中的引⽤
+    > private native void start0(); 操作系统字节码不去操作，需要java虚拟机去操作的方法
+- 内部类持有Activity引用
+
+```
+    public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        }
+        //类1
+        class User{
+            onCreate();
+            String name;
+        }
+        //类2
+        class AsyTask extends AsyncTask {
+        onCreate();
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            return null;
+        }
+        }
+    }
+```
+> User 和 AsyTask都是内部类，都拿到Activity引用，都可以调用Activity任何方法，这个不是内存泄漏的真正原因。
+
+### 多线程的创建方式
+- Thread 和 Runnable
+- ThreadFactory
+
+    ```
+    ThreadFactory factory = new ThreadFactory() {
+     int count = 0;
+     @Override
+     public Thread newThread(Runnable r) {
+     count ++;
+     return new Thread(r, "Thread-" + count);
+     }
+    };
+    ```
+    > 可以统一管理所有线程，比如：名字
+
+- ==Executor== 和线程池
+    - newCachedThreadPool()
+        - 带缓存，自动创建，缓存，销毁，并且没有上限，一般使用这个
+    - newSingleThreadExecutor()
+        - 使用一次就结束，场景：取消
+    - newFixedThreadPool
+        - 固定数量的线程池，批量处理，效率高，并且可统一回收。场景：批量上传/下载图片
+    - newScheduledThreadPool 延时执行
+> 舒缓型关闭：shutdown(), 禁止新的线程加入等待，执行中的线程执行完毕关闭。
+> 强制性关闭：shutdownNow()，立即关闭。
+
+```
+new ThreadPoolExecutor(0(起始线程数), Integer.MAX_VALUE（最大线程数）,
+                                      60L, TimeUnit.SECONDS,（保存多久不被回收）
+                                      new SynchronousQueue<Runnable>()存放线程的工具);
+```
+- Callable 和 Future
+
+### 疑难杂症
+- 主线程本身是个死循环，为什么不会卡顿？
+>   主线程是个大循环，怕小循环卡住大循环
+- ==避免死锁==？
+
+```
+private void setName(){
+    synchronized(monitor1){
+        name = "";
+         synchronized(monitor2){
+            x = "";
+        }
+    }
+}
+
+private void setX(){
+    synchronized(monitor2){
+        x = "";
+         synchronized(monitor1){
+            name = "";
+        }
+    }
+}
+```
+> setName拿到monitor1等待拿monitor2，setX拿到monitor2等待拿monitor1，这样两个谁都不释放锁，形成死锁。
+- 乐观锁，悲观锁？
+> 悲观锁就是现在这种，乐观锁是先不加锁，改完之后发现值和拿的时候不一样再加锁改一次。
+
+### 线程同步与线程安全
+- synchronized  保护的是资源
+> synchronized  保护的是资源不是方法以及代码块
+例如：private synchronized void setName(),private synchronized void setId(),当setName被锁住时，setId也无法访问（==同一个Monitor监视==），如果想他们互不影响，可以改为多个Monitor
+- ==volatile==
+    - 保证加了 volatile 关键字的字段的操作具有原⼦性和同步性，其中原⼦性相当于实现了针对
+单⼀字段的线程间互斥访问。因此 volatile 可以看做是简化版的 synchronized。
+    - volatile 只对基本类型 (byte、char、short、int、long、float、double、boolean) 的赋值
+操作和对象的引⽤赋值操作有效。
+> a=0;有效，a=a+1，无效；user = new User()可以，user.name = ""无效；
+- ==Atomic==Integer AtomicBoolean 等类，作⽤和 volatile 基本⼀致，可以看做是
+通⽤版的 volatile
+> integer.incrementAndGet()可以看作a=a+1，可以保证a=a+1的安全
+- Lock /  ReentrantLock
+> 和synchronized原理一样，但是更加麻烦，需要在finally中lock.unlock()释放锁
+- ==效率==
+> synchronized 会避开CPU缓存，读内存到CPU，写完再考进去)，会很慢，默认我们的数据操作都会在内存拷贝一份数据值到CPU缓存进行计算，效率比较高
+- 读写锁 .readLock .writeLock
+
+```
+    ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    Lock readLock = lock.readLock();
+    Lock writeLock = lock.writeLock();
+    private int x = 0;
+    private void count() {
+     writeLock.lock();
+     try {
+     x++;
+     } finally {
+     writeLock.unlock();
+     }
+    }
+    private void print(int time) {
+     readLock.lock();
+     try {
+     for (int i = 0; i < time; i++) {
+     System.out.print(x + " ");
+     }
+     System.out.println();
+     } finally {
+     readLock.unlock();
+     }
+    }
+```
+> 读写不影响，读的读，写的写
+- 线程安全问题的本质
+>在多个线程访问共同的资源时，在某⼀个线程对资源进⾏写操作的中途（写⼊已经开始，但还没
+结束），其他线程对这个写了⼀半的资源进⾏了读操作，或者基于这个写了⼀半的资源进⾏了写
+操作，导致出现数据错误。
+
+### 线程间交互
+- ⼀个线程终结另⼀个线程
+    - Thread.stop() 强制停止，废弃
+    - ==Thread.interrupt()==：温和式终结：不⽴即、不强制
+        - interrupted() 和 isInterrupted()：检查（和重置）中断状态，==需要中断的地方自己判断然后return==
+            -  Thread.interrupt()中断后会重置状态位
+            -  isInterrupted 不会
+        - InterruptedException 和 ==Thread.sleep为什么加try catch==
+
+        ```
+         {
+             if(Thread.Interrupt()){
+                 //收尾
+                 return;
+             }
+             try{
+                // 一些耗时操作
+                 Thread.sleep(2000);
+             }catch(InterruptedException e){
+                  //收尾
+                 return;
+             }
+         }
+
+        ```
+        >  如果外部调用thread.interrupt 执行InterruptedException的耗时操作会抛出异常，并且==重置打断状态位==。因为急需推出这个线程，所以interrupt会跳过被InterruptedException包裹的代码
+- ==Object.wait()== 和 Object.notify() / notifyAll()
+    - 在未达到⽬标时 wait()
+    - ⽤ while 循环检查
+    - 设置完成后 notifyAll()
+    - wait() 和 notify() / notifyAll() 都需要放在同步代码块⾥
+
+    ```
+    private synchronized void initString(){
+        string = "12345";
+        notifyAll();
+    }
+    private synchronized void printString(){
+    while(null == string){
+        try{
+            wait();
+        }catch(InterruptedException e){
+
+        }
+            System.out.print(string);
+        }
+    }
+    ```
+    > 如果printString在initString之前执行，会拿不到值，所以==wait会先释放掉自己的锁==，去等待结果，当修改完值后调用notifyAll（），再去执行wait后面的代码.为什么在object中，因为要是同一个monitor
+- Thread.==join==()：让另⼀个线程插在⾃⼰前⾯
+- Thread.==yield==()：暂时让出⾃⼰的时间⽚给同优先级的线程
+
+### Android 的 Handler 机制
+- [ActivityThread](https://www.cnblogs.com/mingfeng002/p/10323668.html)
+- ==Handler==：负责任务的定制和线程间传递
+- ==MessageQueue== 存放Message消息的链表，Message中存放Handler，Runnable，传递的消息等。
+- ==Looper== 负责循环、条件判断和任务执⾏
+    - ThreadLocal<String> threadLocal 每个线程内操作自己的值，线程之间不共享,类似于map.put(threadId,value)
+    - looper.prepare 会把当前线程设置到looper中，threadLocal.set(new Looper())
+    - ==looper.loop== 开始死循环，判断MessageQuene中是否有message，方法中会调用message.target.dispatchMessage(),message.target是Handler，Handler.dispatchMessage判断如果有runnable，执行它，如果没有，执行handleMessage
+- HandlerThread 具体的线程，使用场景少
+- AsyncTask
+    - AsyncTask 的内存泄露，其他类型的线程⽅案（Thread、Executor、HandlerThread）⼀样都有，所以不要忽略它们，或者认为 AsyncTask ⽐别的⽅
+案更危险。并没有。
+    - 就算是使⽤ AsyncTask，只要任务的时间不⻓（例如 10 秒之内），那就完全没
+必要做防⽌内存泄露的处理。
+- Service 和 IntentService
+    - Service：后台任务的活动空间。适⽤场景：⾳乐播放器等。
+    - ==IntentService==：执⾏单个任务后⾃动关闭的 Service，包含有==Context==的异步任务，场景：闹钟

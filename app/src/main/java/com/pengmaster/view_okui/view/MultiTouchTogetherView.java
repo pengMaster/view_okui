@@ -22,55 +22,46 @@ import androidx.annotation.Nullable;
  * </pre>
  */
 public class MultiTouchTogetherView extends View {
+    private static final float IMAGE_WIDTH = Utils.px2dp(200);
 
-    private Bitmap bitmap;
-    private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private float offsetX;
-    private float offsetY;
-    private float downX;
-    private float downY;
-    private float originalOffsetX;
-    private float originalOffsetY;
-    private float focusX;
-    private float focusY;
+    Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    Bitmap bitmap;
 
+    float downX;
+    float downY;
+    float offsetX;
+    float offsetY;
+    float originalOffsetX;
+    float originalOffsetY;
 
     public MultiTouchTogetherView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-    }
 
-    {
-        bitmap = Utils.getAvatar(getResources(), 600);
+        bitmap = Utils.getAvatar(getResources(), (int) IMAGE_WIDTH);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-        int totalX = 0;
-        int totalY = 0;
+        float sumX = 0;
+        float sumY = 0;
         int pointerCount = event.getPointerCount();
-        //当第二个手指抬起的时候，只有到MOVE的的时候才实际会少一根手指
         boolean isPointerUp = event.getActionMasked() == MotionEvent.ACTION_POINTER_UP;
-
         for (int i = 0; i < pointerCount; i++) {
-            if(!isPointerUp && event.getActionIndex() == i){
-                float x = event.getX(i);
-                float y = event.getY(i);
-                totalX += x;
-                totalY += y;
+            if (!(isPointerUp && i == event.getActionIndex())) {
+                sumX += event.getX(i);
+                sumY += event.getY(i);
             }
         }
-        if(isPointerUp){
+        if (isPointerUp) {
             pointerCount -= 1;
         }
-        //多个手指中心点
-        focusX = totalX / pointerCount;
-        focusY = totalY / pointerCount;
-
+        float focusX = sumX / pointerCount;
+        float focusY = sumY / pointerCount;
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
-            case MotionEvent.ACTION_POINTER_UP://当第二个手指抬起的时候，只有到MOVE的的时候才实际会少一根手指
+            case MotionEvent.ACTION_POINTER_UP:
                 downX = focusX;
                 downY = focusY;
                 originalOffsetX = offsetX;
@@ -81,15 +72,12 @@ public class MultiTouchTogetherView extends View {
                 offsetY = originalOffsetY + focusY - downY;
                 invalidate();
                 break;
-
         }
         return true;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
         canvas.drawBitmap(bitmap, offsetX, offsetY, paint);
     }
 }

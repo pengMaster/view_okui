@@ -44,22 +44,23 @@ public class MultiTouchDrawBoardView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_POINTER_DOWN:
                 Path path = new Path();
-                path.reset();
-                path.moveTo(event.getX(), event.getY());
-                paths.append(event.getPointerId(event.getActionIndex()),path);
+                path.moveTo(event.getX(event.getActionIndex()), event.getY(event.getActionIndex()));
+                paths.append(event.getPointerId(event.getActionIndex()), path);
                 invalidate();
                 break;
             case MotionEvent.ACTION_MOVE:
-                for (int i = 0; i <event.getPointerCount(); i++) {
+                for (int i = 0; i < event.getPointerCount(); i++) {
                     int pointerId = event.getPointerId(i);
                     path = paths.get(pointerId);
-                    path.lineTo(event.getX(i),event.getY(i));
+                    path.lineTo(event.getX(i), event.getY(i));
                 }
 
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
                 paths.remove(event.getPointerId(event.getActionIndex()));
                 invalidate();
                 break;
