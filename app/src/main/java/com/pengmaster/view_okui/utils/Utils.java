@@ -38,4 +38,5 @@ public class Utils {
     public static float getCameraZLocation(){
         return -8 * Resources.getSystem().getDisplayMetrics().density;
     }
+
 }

@@ -627,3 +627,199 @@ private void setX(){
 - Service 和 IntentService
     - Service：后台任务的活动空间。适⽤场景：⾳乐播放器等。
     - ==IntentService==：执⾏单个任务后⾃动关闭的 Service，包含有==Context==的异步任务，场景：闹钟
+
+### 组件化、插件化和热更新
+### 需要用到知识点
+- javac Test.java 可以将java文件编译成Test.class
+- java Test 可以执行Test.class文件
+- build tools 中d8可以将 .class 编译成.dex
+- JVM通过ClassLoader读取class文件，然后把字节码转换成平台/系统能够使用的机器码，因此实现跨平台
+
+- 反射
+
+```
+try {
+//获取类
+ Class utilClass = Class.forName("com.hencoder.demo.hidden.Util");
+ //获取构造方法
+ Constructor utilConstructor = utilClass.getDeclaredConstructors()[0];
+ utilConstructor.setAccessible(true);//开启访问权限
+ //创建对象
+ Object util = utilConstructor.newInstance();
+ //创建方法
+ Method shoutMethod = utilClass.getDeclaredMethod("shout");
+ shoutMethod.setAccessible(true);//开启访问权限
+ //调用方法
+ shoutMethod.invoke(util);
+} catch (ClassNotFoundException e) {
+ e.printStackTrace();
+} catch (NoSuchMethodException e) {
+ e.printStackTrace();
+} catch (IllegalAccessException e) {
+ e.printStackTrace();
+} catch (InstantiationException e) {
+ e.printStackTrace();
+} catch (InvocationTargetException e) {
+ e.printStackTrace();
+}
+```
+### 组件化
+> 拆成多个 module 开发就是组件化
+
+### 插件化
+> App 的部分功能模块在打包时并不以传统⽅式打包进 apk ⽂件中，⽽是以另⼀种形式⼆次封装进 apk
+内部，或者放在⽹络上适时下载，在需要的时候动态对这些功能模块进⾏加载，称之为插件化。
+- ==插件化原理：动态加载==
+    - 通过⾃定义 ClassLoader 来加载新的 dex ⽂件，从⽽让程序员原本没有的类可以被使⽤，这就是插件
+化的原理。
+- 代码实现
+> 拿到Apk，用DexClassLoader拿到里面的class，在用反射调方法
+```
+DexClassLoader classLoader = new DexClassLoader(f.getPath(),
+getCodeCacheDir().getPath(), null, null);
+Class oldClass =
+classLoader.loadClass("com.hencoder.demo.hidden.Util");
+//接反射代码
+```
+- ==如何启动 Activity==
+    - 解决⽅式⼀：代理 Activity
+        - 宿主项目中写一个PreRealActivity，注册好，里面用反射获取到插件Apk中的ShellActivity（不是真正Activity，只是一个class就可以），然后把ShellActivity的所有方法相对应的放到PreRealActivity的生命周期中执行
+    - 解决⽅式⼆：欺骗系统
+        - 在系统读取到要启动Activity 的指令后换掉Activity，目前==流行方案==
+    - 解决⽅式三：重写 gradle 打包过程，合并 AndroiManifest.xml
+        - 不合适
+- ==资源⽂件⽆法加载==
+    - 解决⽅式：⾃定义 AssetManager 和 Resources 对象
+
+```
+    private AssetManager createAssetManager(String dexPath) {
+     try {
+     AssetManager assetManager = AssetManager.class.newInstance();
+     Method addAssetPath =
+    assetManager.getClass().getMethod("addAssetPath", String.class);
+     addAssetPath.invoke(assetManager, dexPath);
+     return assetManager;
+     } catch (Exception e) {
+     e.printStackTrace();
+     return null;
+     }
+    }
+
+    private Resources createResources(AssetManager assetManager) {
+     Resources superRes = mContext.getResources();
+     Resources resources = new Resources(assetManager,
+    superRes.getDisplayMetrics(), superRes.getConfiguration());
+     return resources;
+    }
+```
+- ==Android App Bundles==
+    - 属于「模块化发布」。未来也许会⽀持动态部署，但肯定会需要结
+合应⽤商店（即 Play Store，或者未来被更多的商店所⽀持，那样插件化就彻底没有存在意义了）
+#### 关于 DEX：
+- class：java 编译后的⽂件，每个类对应⼀个 class ⽂件
+- dex：Dalvik EXecutable 把 class 打包在⼀起，⼀个 ==dex 可以包含多个 class ⽂件==
+- ==odex==：Optimized DEX ==针对系统的优==化，例如某个⽅法的调⽤指令，会把虚拟的调⽤转换为使
+⽤具体的 index，这样在执⾏的时候就不⽤再查找了
+- oat：Optimized Android file Type。使⽤ AOT 策略对 dex 预先编译（解释）成本地指令，这样
+再运⾏阶段就不需再经历⼀次解释过程，程序的运⾏可以更快
+    - ==AOT==：Ahead-Of-Time compilation ==预先编译==
+
+### 热修复
+- ==ClassLoader==
+    - 工作原理：==双亲委托==
+    > 从下面向上递归findLoadedClass查找父类中的缓存是否有这个class，没找到在从上到下调用方法findClass自己加载
+![avatar](https://github.com/pengMaster/picApplyGit/blob/master/okUi/WechatIMG4.jpeg)
+
+```
+protected Class<?> loadClass(String name, boolean resolve)
+        throws ClassNotFoundException
+    {
+            // First, check if the class has already been loaded
+            //缓存中找
+            Class<?> c = findLoadedClass(name);
+            if (c == null) {
+                try {
+                    if (parent != null) {
+                    //向父类传递
+                        c = parent.loadClass(name, false);
+                    } else {
+                        c = findBootstrapClassOrNull(name);
+                    }
+                } catch (ClassNotFoundException e) {
+                    // ClassNotFoundException thrown if class not found
+                    // from the non-null parent class loader
+                }
+
+                if (c == null) {
+                    // If still not found, then invoke findClass in order
+                    // to find the class.
+                    //自己加载
+                    c = findClass(name);
+                }
+            }
+            return c;
+    }
+```
+- ==findClass==
+> BaseDexClassLoader的findClass -> PathList的findClass -> Element的findClass(调用dexFile.loadClassBinaryName native方法)
+替换PathList中的elements就可以达到热更新
+- ==操作步骤==
+- - 1.获取PathList中老得的elements
+
+```
+                ClassLoader classLoader = getClassLoader();
+                Class loaderClass = BaseDexClassLoader.class;
+                Field pathListField = loaderClass.getDeclaredField("pathList");
+                pathListField.setAccessible(true);
+                Object pathListObject = pathListField.get(classLoader);
+                Class pathListClass = pathListObject.getClass();
+                Field dexElementsField = pathListClass.getDeclaredField("dexElements");
+                dexElementsField.setAccessible(true);
+                Object dexElementsObject = dexElementsField.get(pathListObject);
+```
+-    - 2.获取新的elements
+
+```
+                PathClassLoader newClassLoader = new PathClassLoader(apk.getPath(), null);
+                Object newPathListObject = pathListField.get(newClassLoader);
+                Object newDexElementsObject = dexElementsField.get(newPathListObject);
+```
+- - 3.将新的dex插到老得dex前面
+
+```
+                int oldLength = Array.getLength(dexElementsObject);
+                int newLength = Array.getLength(newDexElementsObject);
+                Object concatDexElementsObject = Array.newInstance(dexElementsObject.getClass().getComponentType(), oldLength + newLength);
+                for (int i = 0; i < newLength; i++) {
+                    Array.set(concatDexElementsObject, i, Array.get(newDexElementsObject, i));
+                }
+                for (int i = 0; i < oldLength; i++) {
+                    Array.set(concatDexElementsObject, newLength + i, Array.get(dexElementsObject, i));
+                }
+
+                dexElementsField.set(pathListObject, concatDexElementsObject);
+```
+
+- ==自动生成dex==
+
+```
+task hotfix {
+    doLast {
+        exec {
+            commandLine 'rm', '-r', './build/patch'
+        }
+        exec {
+            commandLine 'mkdir', './build/patch'
+        }
+        exec {
+            commandLine 'javac', "./src/main/java/${patchPath}.java", '-d', './build/patch'
+        }
+        exec {
+            commandLine '/Users/pengmaster/.android-sdk/build-tools/28.0.3/d8', "./build/patch/${patchPath}.class", '--output', './build/patch'
+        }
+        exec {
+            commandLine 'mv', "./build/patch/classes.dex", './build/patch/hotfix.dex'
+        }
+    }
+```
+> 命令行执行 .gradlew hotfix 即可
