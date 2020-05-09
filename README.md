@@ -823,3 +823,511 @@ task hotfix {
     }
 ```
 > 命令行执行 .gradlew hotfix 即可
+
+---
+### HTTP
+- REST HTTP
+- get delete 幂等
+- post put 不是幂等
+- ==head== 和 GET 唯⼀区别在于，返回的==响应中没有 Body== 可以用于大文件下载，先获取他的大小，再分块传输，断点续传，继续传输返回状态码100
+- Location==重定向 http转https== 状态码返回301
+- HOST不是用来寻址：为什么输入域名，因为主机可能对应多个域名服务。 ，DNS寻址：拿着域名问域名系统对应ip，返回多个ip或者一个
+- 端口是TCP端口 HTTP没有端口
+- ==content-length== 内容长度 如果是二进制数据，无法定义什么时候算==结束==，所以服务器按照content-length的长度定义结束
+- ==content-type== 几种方式 见讲义
+    - multitype/form-data
+    >  boundary=----
+WebKitFormBoundary7MA4YWxkTrZu0gW 内容分隔符
+- ==单文件传输 applacation/zip  image/jepg== 更高效，用multitype/form-data 有点浪费
+- ==Transfer-Encoding: chunked== 分块传输编码
+    - 服务器需要耗时，先给客户端一部分数据，再慢慢给
+- ==Range / Accept-Range 断点续传、多线程下载==
+    - Accept-Range: bytes 响应报⽂中出现，表示服务器⽀持按字节来取范围数据
+    - Header中添加 Range: bytes=<start>-<end> 请求报⽂中出现，表示要取哪段数据
+    - Content-Range:<start>-<end>/total 响应报⽂中出现，表示发送的是哪段数据
+- ==Cache/buffer==
+    - buffer 缓冲 针对流， 提前生产一部分存起来供你消费。视频播放提前加载的视频流
+    - cache 缓存 用过的东西等会可能会复用， 在客户端或中间⽹络节点缓存数据，降低从服务器取数据的频率，以提⾼⽹络性能
+        - ==cache-control==:no-cache 可以缓存，客户端访问资源需要询问是否过期。
+no-store 没有缓存，max-age：可以缓存，在指定时间内直接访问，不用问我。
+        -  ==last-modified== 文件最后修改时间。
+        -  Etag 指纹，客户端拿自己的和服务器比对是否过期
+        -  ==cache-control：private/public==  告诉路上的中间节点是否需要缓存，public缓存，private不缓存
+
+
+---
+### 登录授权
+#### 登录和授权的区别
+授权：由身份或==持有的令牌==确认享有某些权限（例如获取⽤户信息）。登录过程实质上的⽬的也
+是为了确认权限
+#### HTTP 中确认授权（或登录）的两种⽅式
+##### 1. 通过 Cookie
+- 会话管理：登录状态、购物⻋ header中添加sessionId
+- 个性化：⽤户偏好、主题
+- Tracking：分析⽤户⾏为
+##### 危险：
+- XSS (Cross-site scripting)
+> 即使⽤ JavaScript 拿到浏览器的
+Cookie 之后，发送到⾃⼰的⽹站.
+==应对⽅式：set-cookie:sessionId = 1;HttpOnly==
+这样JavaScript就拿不到了
+- XSRF (Cross-site request forgery)
+> 你登录着银行网站没有过期，然后你来我网站我给你转接到银行并进行给我转账。
+==应对⽅式：Referer 校验。==
+
+##### 2. 通过 ==Authorization Header==
+##### 2.1 ==Basic==：
+Authorization: Basic <username:password(Base64ed)>
+>Authorization: Basic uwehfiushdihu=
+将用户名密码Base64之后发送出去
+##### 2.2 ==Bearer==：
+Authorization: Bearer <bearer token>
+- bearer token 的获取⽅式：通过 ==OAuth2 的授权流程==
+> 网站请求Github申请第三方授权 -> github返回Authorization code -> 网站把Authorization code发给自己的服务器 -> 服务器将 Authorization code 和⾃⼰的 client secret发送给Github获取access token。==一般access token不会给客户端，否则这个流程没有意义，Authorization code只是说可以给你，不包含敏感信息。==
+- 在⾃家 App 中使⽤ Bearer token
+>有的 App 会在 Api 的设计中，将登录和授权设计成类似 OAuth2 的过程，但简化掉
+Authorization code 概念。即：登录接⼝请求成功时，会返回 access token，然后客户端在之
+后的请求中，就可以使⽤这个 access token 来当做 bearer token 进⾏⽤户操作了。
+- Refresh token
+> access token 有失效时间，在它失效后，调⽤ refresh token 接⼝，传⼊ refresh_token
+来获取新的 access token
+---
+### TCP / IP 协议族
+#### 为什么要分层？
+客户端到服务器中间有很多节点，文件又大，老是断需要续传，所以把文件切成块，分块传输，所以需要多层配合去完成。
+#### 具体分层：
+- Application Layer 应⽤层：HTTP、FTP、DNS
+    > HTTP、FTP都需要分块，所以把分块干活的人抽出来，他自己本身不负责分块，只负责把任务下发。
+- Transport Layer 传输层：TCP、UDP
+    - UDP 网断了不需要重传，比如吃鸡游戏，卡了恢复后更新到最新的位置就好
+    - TCP负责给信息分块编号，负责确认哪些信息没有传到。都传完后组装好通知http，消息传完了
+- Internet Layer ⽹络层：IP
+    > 负责具体每块的传输，只管传输
+- Link Layer 数据链路层：以太⽹、Wi-Fi
+
+#### ==TCP 连接==
+- TCP建立
+ ==三次握手==
+    - 1.客户端向服务端说：我要向你发消息了
+    - 2.服务端向客户端说：第一：我知道了，第二：我也要向你发消息了。期间发送的消息都是TCP消息
+    - 3.客户端向服务端说：我也知道了
+- TCP关闭
+==四次挥手==
+    - 1.客户端向服务器说：我要关闭了
+    - 2.服务端向客户端说：我知道了
+    - 3.服务端向客户端说：我也要关闭了
+    - 4.客户端向服务端说：我知道了
+> 与建立链接相比，第二阶段拆成了两个，因为服务端关闭之前可能还有未发送完的消息，所以等发完了再主动向客户端说：我也要关闭了
+
+#### ⻓连接
+==⼼跳==。即在⼀定间隔时间内，使⽤ TCP 连接发送超短⽆意义消息来让⽹关不能将⾃⼰定义为「空闲连
+接」，从⽽防⽌⽹关将⾃⼰的连接关闭。
+---
+
+### ==HTTPS==
+HTTP over SSL 的简称，即⼯作在 SSL （或 TLS）上的 HTTP。说⽩了就是加密通信的 HTTP
+#### ⼯作原理
+在客户端和服务器之间协商出⼀套对称密钥，每次发送信息之前将内容加密，收到之后解密，达到内
+容的加密传输
+#### 为什么不直接⽤⾮对称加密？
+⾮对称加密由于使⽤了复杂了数学原理，因此计算相当复杂，如果完全使⽤⾮对称加密来加密通信内
+容，会严重影响⽹络通信的性能
+#### ==HTTPS 连接建⽴的过程==
+1. 客户端向服务端发送：Client Hello
+> 还会附带自己支持的版本：TLS版本，Cipher Suite（对称加密算法，非对称解密算法，hash算法），随机数（客户端/服务端两个）
+2. Server Hello
+> 服务器会把客户端发的选定套装版本，发送回客户端
+3. 服务器证书 信任建⽴
+> 服务器发过来证书和相关信息
+4. Pre-master Secret
+> 唯一非对称机密过程，非对称加密Pre-master Secret一个随机数发送给服务器。然后==双方利用三个随机数（包含上面1，2步骤中的随机数）生成Master Secret,在用Master Secret双方都生成（客户端加密密钥，服务端加密密钥，客户端MAC Secret，服务端MAC Secret）==
+5. 客户端通知：将使⽤加密通信
+> 实际会把上面所有信息都包起来发送过去，下面几步也是这样操作
+6. 客户端发送：Finished
+7. 服务器通知：将使⽤加密通信
+8. 服务器发送：Finished
+
+#### ==服务器证书==
+>上面过程3，服务器发过来的证书包含什么内容，证书信任证书机构，证书机构信任证书签发方，证书签发方在手机或者电脑里存着
+- 服务器地址
+- 证书公钥
+- 证书签名
+    - 证书机构公钥
+    - 证书机构信息
+        - 证书签发机构方
+
+#### 需要⾃⼰写证书验证过程的场景
+- ⽤的是⾃签名证书（例如只⽤于内⽹的 https）
+- 证书信息不全，缺乏中间证书机构（可能性不⼤）
+- ⼿机操作系统较旧，没有安装最新加⼊的根证书
+---
+### 编码、加密、Hash
+#### 古典密码学
+- 移位式加密
+> 如密码棒，使⽤布条缠绕在⽊棒上的⽅式来对书信进⾏加密
+- 替换式加密
+> 按规则使⽤不同的⽂字来替换掉原先的⽂字来进⾏加密
+#### 现代密码学
+- 可以加密任何⼆进制数据 (现代可以加密图片/视频)
+- ⾮对称加密的出现使得密码学有了更⼴泛的⽤途：数字签名
+
+#### 对称加密
+> 使⽤加密算法配合上密钥来加密，解密时使⽤加密过程的完全逆过程配合
+密钥来进⾏解密,类似于 ==替换式加密==
+- 经典算法
+==DES==（56 位密钥，密钥太短⽽逐渐被弃⽤）、==AES==（128 位、192 位、256 位密钥，现在最流⾏）
+- 缺点
+    - ==密钥无法发送==
+    - 容易被破解
+
+#### ⾮对称加密
+> 使⽤公钥对数据进⾏加密得到密⽂；使⽤私钥对数据进⾏加密得到原数据
+- ==可以发送公钥==
+>A单位有公钥A和私钥A。想和谁通信把公钥发给谁，让对方拿自己的公钥加密，然后发回来，自己拿私钥解密。
+- 公钥可以根据私钥算出来，所以传输公钥而不是私钥。比特币的椭圆曲线算法
+
+#### 签名与验证
+- 私钥加密，对方拿自己的公钥解密。因为只有自己有私钥，所以没有人能造出这样的数据来，因此能验证数据来源于我
+- ==防止别人伪造数据==
+- 经典算法：==RSA==（可⽤于加密和签名）、DSA（仅⽤于签名，但速度更快，椭圆曲线 ECDSA）
+---
+### Base64
+#### 什么是==⼆进制数据==？
+- ⼴义：所有计算机数据都是⼆进制数据
+- ሀ义：==⾮⽂本数据即⼆进制数据==
+
+#### 算法
+将原数据每 6 位对应成 Base 64 索引表中的⼀个字符编排成⼀个字符串（每个字符 8 位）。
+#### Base64 的缺点
+因为⾃身的原理（6 位变 8 位），因此每次 Base64 编码之后，==数据都会增⼤约 1/3==，所以会影响存
+储和传输性能。
+#### 「Base64 加密图⽚传输更安全和⾼效」？？？
+==不==。⾸先，Base64 并不是加密；另外，Base64 会导致数据增⼤ 1/3，降低⽹络性能，增⼤⽤户流量
+开销，是画蛇添⾜的⼿段。
+#### Base58
+⽐特币使⽤的编码⽅式，去掉了 Base64 中的数字 "0"，字⺟⼤写 "O"，字⺟⼤写 "I"，和字⺟⼩写
+"l"，以及 "+" 和 "/" 符号，⽤于⽐特币地址的表示， 对于「==⼈⼯抄写==」更加⽅便，另外，去掉了 "+" "/" 号后也让⼤多数的软件可以==⽅便双击选==
+---
+### 压缩与解压缩
+#### 常⻅压缩算法
+DEFLATE（.zip使用的是该算法）、JPEG、MP3 等
+#### ==压缩是编码吗？==
+是。所谓编码，即把数据从⼀种形式转换为另⼀种形式。压缩过程属于编码过程，解压缩过程属于解
+码过程
+---
+### 序列化
+把数据对象（⼀般是内存中的，例如 JVM 中的对象）转换成字节序列的过程。对象在程序内存⾥的存
+放形式是==散乱的（存放在不同的内存区域、并且由引⽤进⾏连接），通过序列化可以把内存中的对象
+转换成⼀个字节序列==，从⽽使⽤ byte[] 等形式进⾏本地存储或⽹络传输，在需要的时候重新组装（反
+序列化）来使⽤。
+#### ⽬的
+==让内存中的对象可以被储存和传输==。
+#### 序列化是编码吗？
+###### 不是
+---
+### Hash
+相当于从==数据中提出摘要信息==，因此最主要⽤途是数字指纹
+#### 经典算法
+==MD5 SHA1 SHA256==
+#### 实际⽤途
+- ==数据完整性验证==
+    - 从⽹络上下载⽂件后，通过⽐对⽂件的 Hash 值（例如 MD5、SHA1），可以确认下载的⽂件是否有
+损坏。如果下载的⽂件 Hash 值和⽂件提供⽅给出的 Hash 值⼀致，则证明==下载的⽂件是完好⽆损==
+的。
+- ==快速查找==
+    - HashMap
+        - key 的hash值 在内存地址中比对是否该位置已经存放数据，如果没有则存上。如果对象不重写hashCode却使用HashMap，会造成数据混乱。
+    - 对象重写hashCode 直接比对hashCode结果就可以确定是否为同一对象
+- 隐私保护
+    - 登录密码做hash，为了防止被破解，可以用加盐的方式，就是MD5（密码+333）进行hash，333为盐。
+
+#### Hash 是编码吗？
+不是。 ==Hash 是单向过程==，往往是不可逆的，⽆法进⾏逆向恢复操作，因此 Hash 不属于编码。==编码是将数据改变形式，还能改变回来的，可逆的。==
+
+#### Hash 是加密吗？
+不是。Hash 是单向过程，⽆法进⾏逆向回复操作，因此 Hash 不属于加密。（记住，==MD5 不是加
+密==！），
+---
+### ==MVC==
+#### Android中默认项目就MVC
+> 主流理解，MVC变种
+- 布局就是View层
+- Activity就是Control层
+- 网络下载数据就是Model层
+
+```
+public class MainActivity extends AppCompatActivity {
+    EditText data1View;
+    EditText data2View;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        data1View = findViewById(R.id.data1View);
+        data2View = findViewById(R.id.data2View);
+
+        String[] data = DataCenter.getData();
+        data1View.setText(data[0]);
+        data2View.setText(data[1]);
+    }
+}
+```
+### ==变种MVC==
+- View抽出来为View层
+- Activity仍然是Control层
+- 网络下载就是model层
+> 在默认基础上把View抽出来，面向接口，将DateView实例化成IView接口
+```
+public class DataView extends LinearLayout implements MvcActivity.IView {
+    EditText data1View;
+    EditText data2View;
+
+    public DataView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+        data1View = findViewById(R.id.data1View);
+        data2View = findViewById(R.id.data2View);
+    }
+
+    @Override
+    public void showData(String data1, String data2) {
+        data1View.setText(data1);
+        data2View.setText(data2);
+    }
+}
+```
+
+```
+<com.hencoder.a25_mvc_mvp_mvvm.mvc.DataView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dataView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <EditText
+        android:id="@+id/data1View"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        android:id="@+id/data2View"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="Save"/>
+
+</com.hencoder.a25_mvc_mvp_mvvm.mvc.DataView>
+```
+
+```
+public class MvcActivity extends AppCompatActivity {
+    IView dataView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_mvc);
+
+        dataView = findViewById(R.id.dataView);
+
+        String[] data = DataCenter.getData();
+        dataView.showData(data[0], data[1]);
+    }
+
+    interface IView {
+        void showData(String data1, String data2);
+    }
+}
+
+```
+
+### ==主流MVP==
+> 思路：把逻辑从Activity拆出来搞成Present，然后把本身传入Activity的更新View方式替换成用接口。
+- 网络下载数据为Model层
+- Activity为View层
+- 逻辑处理为Present层
+> 如果不面向接口IView，那么就需要把Activity传到Present层中，面向接口扩展性高，可以把他俩一起考虑理解。
+```
+public class Presenter {
+    IView iView;
+
+    Presenter(IView mvpActivity) {
+        this.iView = mvpActivity;
+    }
+
+    void load() {
+        String[] data = DataCenter.getData();
+        iView.showData(data[0], data[1]);
+    }
+
+    interface IView {
+        void showData(String data1, String data2);
+    }
+}
+
+```
+
+```
+public class MvpActivity extends AppCompatActivity implements Presenter.IView {
+    EditText data1View;
+    EditText data2View;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        data1View = findViewById(R.id.data1View);
+        data2View = findViewById(R.id.data2View);
+
+        new Presenter(this).load();
+    }
+
+    @Override
+    public void showData(String data1, String data2) {
+        data1View.setText(data1);
+        data2View.setText(data2);
+    }
+}
+```
+
+### 理解
+> 变种==MVC 和 MVP== 其实都是View和Model隔离，严格意义上没有优略势，并且没有特别明显的界限。他俩都是架构规范，灵活运用。
+
+### ==MVVM==
+> 一个库，按照他实现。可以理解为实现双向绑定的MVP
+
+#### 数据
+1.外部数据。网络或者数据库数据
+2.内存数据。方法中定义的值。
+3.表现数据。界面上展示的数据。
+
+#### ==双向绑定==
+就是将表现数据和内存数据绑定，自动改变。框架可以将表现数据绑定外部数据。
+
+
+```
+//M层：
+public class MvvmActivity extends AppCompatActivity {
+    EditText data1View;
+    EditText data2View;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        data1View = findViewById(R.id.data1View);
+        data2View = findViewById(R.id.data2View);
+
+        new ViewModel(new ViewBinder(), data1View, data2View).load();
+    }
+}
+```
+
+```
+//V层
+public class ViewBinder {
+    void bind(final EditText editText, final ViewModel.TextAttr text) {
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!s.equals(text.getText())) {
+                    text.setText(s.toString());
+                }
+            }
+        });
+        text.setOnChangeListener(new ViewModel.TextAttr.OnChangeListener() {
+            @Override
+            public void onChange(String newText) {
+                if (!newText.equals(editText.getText().toString())) {
+                    editText.setText(newText);
+                }
+                System.out.println("被动改变: " + newText);
+            }
+        });
+    }
+}
+
+```
+
+```
+//V层
+public class ViewModel {
+    TextAttr data1 = new TextAttr();
+    TextAttr data2 = new TextAttr();
+
+    ViewModel(ViewBinder binder, EditText editText1, EditText editText2) {
+        binder.bind(editText1, data1);
+        binder.bind(editText2, data2);
+    }
+
+    void load() {
+        String[] data = DataCenter.getData();
+        data1.setText(data[0]);
+        data2.setText(data[1]);
+    }
+
+    static class TextAttr {
+        private String text;
+        private OnChangeListener listener;
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+            if (listener != null) {
+                listener.onChange(text);
+            }
+        }
+
+        void setOnChangeListener(OnChangeListener listener) {
+            this.listener = listener;
+        }
+
+        interface OnChangeListener {
+            void onChange(String newText);
+        }
+    }
+}
+
+```
+
+```
+//Model层
+public class DataCenter {
+    public static String[] getData() {
+        return new String[] {"Hi", "Author"};
+    }
+
+    public static void setData() {
+
+    }
+}
+
+```

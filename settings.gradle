@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':28_lib_processor', ':lib_bindview'
 rootProject.name='view_okui'

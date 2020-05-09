@@ -1,19 +1,20 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-
+//对根目录文件配置
 buildscript {
     repositories {
+        //classpath 'com.android.tools.build:gradle:3.5.3' 的下载地址
         google()
         jcenter()
-        
     }
     dependencies {
+        //指定项目中要用哪些plugin apply plugin: 'com.android.application'
         classpath 'com.android.tools.build:gradle:3.5.3'
-        
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        //等价于
+        //add('classpath','com.android.tools.build:gradle:3.5.3')
     }
 }
 
+//对每个project的配置
 allprojects {
     repositories {
         google()
@@ -21,7 +22,20 @@ allprojects {
         
     }
 }
+//等价于
+//allprojects (new Action<Project>() {
+//    @Override
+//    void execute(Project project) {
+//        repositories {
+//            google()
+//            jcenter()
+//
+//        }
+//    }
+//})
 
 task clean(type: Delete) {
+    println('before')
     delete rootProject.buildDir
+    println('after')
 }

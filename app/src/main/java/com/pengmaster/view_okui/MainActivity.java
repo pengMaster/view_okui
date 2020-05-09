@@ -14,8 +14,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.TextView;
 
+import com.pengmaster.lib_bindview.BindView;
+import com.pengmaster.view_okui.utils.BindProcessorUtil;
+import com.pengmaster.view_okui.utils.Bingding;
 import com.pengmaster.view_okui.utils.Utils;
+import com.pengmaster.view_okui.utils.VersionColorUtils;
 import com.pengmaster.view_okui.view.CameraAnimationView;
 import com.pengmaster.view_okui.view.KeyframeAnimationView;
 
@@ -30,12 +35,21 @@ public class MainActivity extends AppCompatActivity {
     //    CameraAnimationView cameraAnimationView ;
 //    KeyframeAnimationView view;
 
+    @BindView(R.id.textView)
+    TextView textView;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        BindProcessorUtil.Bind(this);
 
+        //不同版本自动切换顶部颜色
+        VersionColorUtils.setVersion(this);
+
+        textView.setText("sdfsdf");
 
 //        view = findViewById(R.id.cameraView);
 
