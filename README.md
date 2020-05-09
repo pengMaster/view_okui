@@ -1331,3 +1331,350 @@ public class DataCenter {
 }
 
 ```
+---
+### 反射注解
+- Annotation
+    - 特殊Interface
+    ```
+    //运行范围 什么时期有效 RUNTIME 一直有效
+    //SOURCE 只有自己能看到 CLASS 能运行在class中但是虚拟机未必能看到
+    @Retention(RetentionPolicy.RUNTIME)
+    //作用范围 字段/对象等
+    @Target(ElementType.FIELD)
+    public @interface BindView {
+        int value();
+        //int id() default 1;可以设置多个值
+    }
+
+    //使用的地方
+    @BindView(R.id.view,id = 2)
+    ```
+    - 反射方法
+
+    ```
+    public static void bind(Activity activity){
+        for (Field field : activity.getClass().getDeclaredFields()) {
+            try {
+                BindView bindView = field.getAnnotation(BindView.class);
+                if (null != bindView) {
+                    field.setAccessible(true);
+                    field.set(activity,activity.findViewById(bindView.value()));
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    ```
+- Dagger 依赖注入，butternife不是依赖注入
+> Activity依赖内部的字段。
+
+```
+class User{
+    String name;
+    int id;
+    User(String name,int id){
+        this.name = name;
+        this.id = id;
+    }
+}
+
+MainActivity中：
+User user = new User("name",1);
+通过外部将值赋值的方式叫做依赖注入
+```
+
+### AnnotationProcessor
+> 性能高于反射
+- annotationProcessor(':lib_processor') 编译期有效，不会增大包体积。因此要把==processor和BindView分开==
+- 1.创建BindView
+
+```
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.FIELD)
+public @interface BindView {
+    int value();
+}
+
+```
+- 2.新建BindProcessor，自动生成MainActivityBinding类，其中包含该Activity的findViewById方法
+> annotationProcessor project(':28_lib_processor') 引入主项目
+```
+public class BindingProcessor extends AbstractProcessor {
+    Filer filer;
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+        filer = processingEnv.getFiler();
+    }
+
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        for (Element element : roundEnv.getRootElements()) {
+            String packageStr = element.getEnclosingElement().toString();
+            String classStr = element.getSimpleName().toString();
+            ClassName className = ClassName.get(packageStr, classStr + "$Binding");
+            MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(ClassName.get(packageStr, classStr), "activity");
+            boolean hasBinding = false;
+
+            for (Element enclosedElement : element.getEnclosedElements()) {
+                BindView bindView = enclosedElement.getAnnotation(BindView.class);
+                if (bindView != null) {
+                    hasBinding = true;
+                    constructorBuilder.addStatement("activity.$N = activity.findViewById($L)",
+                            enclosedElement.getSimpleName(), bindView.value());
+                }
+            }
+
+            TypeSpec builtClass = TypeSpec.classBuilder(className)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addMethod(constructorBuilder.build())
+                    .build();
+
+            if (hasBinding) {
+                try {
+                //将生成的类写入Build文件中
+                    JavaFile.builder(packageStr, builtClass)
+                            .build().writeTo(filer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
+    }
+
+    // 声明要检查的文件类型
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Collections.singleton(BindView.class.getCanonicalName());
+    }
+}
+```
+- 3.在使用findViewById之前，通过反射初始化MainActivityBinding
+
+```
+            // new MainActivityBinding(activity);
+            Class bindingClass = Class.forName(activity.getClass().getCanonicalName() + "$Binding");
+            Class activityClass = Class.forName(activity.getClass().getCanonicalName());
+            Constructor constructor = bindingClass.getDeclaredConstructor(activityClass);
+            constructor.newInstance(activity);
+```
+---
+### Gradle
+- ==自动化脚本==
+- 目录结构分解
+
+```
+//对根目录文件配置
+buildscript {
+    repositories {
+        //classpath 'com.android.tools.build:gradle:3.5.3' 的下载地址
+        google()
+        jcenter()
+    }
+    dependencies {
+        //指定项目中要用哪些plugin apply plugin: 'com.android.application'
+        classpath 'com.android.tools.build:gradle:3.5.3'
+        //等价于
+        //add('classpath','com.android.tools.build:gradle:3.5.3')
+    }
+}
+
+//对每个project的配置
+allprojects {
+    repositories {
+        google()
+        jcenter()
+
+    }
+}
+//等价于
+//allprojects (new Action<Project>() {
+//    @Override
+//    void execute(Project project) {
+//        repositories {
+//            google()
+//            jcenter()
+//
+//        }
+//    }
+//})
+
+```
+
+#### gradle 是什么
+- 是构建⼯具，不是语⾔
+ - 它⽤了 Groovy 这个语⾔，创造了⼀种 DSL，但它本身不是语⾔
+- 闭包
+    -  相当于可以被传递的代码块
+
+```
+allprojects {
+    repositories {
+        google()
+        jcenter()
+
+    }
+}
+或者
+allprojects （{
+    repositories （{
+        google()
+        jcenter()
+
+    }）
+}）
+```
+#### ==buildType 版本控制==
+> src下面创建相应internal目录，目录下放相应操作代码 ，编译的时候会打在一起，main中可直接调用，使用Build Varians工具切换版本
+```
+    buildTypes {
+        //内测版
+        internal{
+            //延用debug的配置
+            initWith debug
+        }
+        //正式版
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+```
+#### ==productFlavors 渠道包==
+> 会和debug internal release 进行累加
+
+```
+    //渠道包 收费版/免费版
+    flavorDimensions 'price'
+    productFlavors{
+        free{
+            dimension 'price'
+        }
+        paid{
+            dimension 'price'
+        }
+    }
+```
+#### compile, implementation 和 api ==加快编译过程==
+- implementation：不会传递依赖
+- compile / api：会传递依赖；api 是 compile 的替代品，效果完全等同
+- 当依赖被传递时，⼆级依赖的改动会导致 0 级项⽬重新编译；当依赖不传递时，⼆级依赖的改动
+不会导致 0 级项⽬重新编译
+
+####  ==gradle如何确定项⽬结构==
+    - 单 project：build.gradle
+    - 多 project：由 settings.gradle 配置多个
+    - ==查找 settings 的顺序==：
+        - 1. 当前⽬录
+        - 2. 兄弟⽬录 master
+        - 3. ⽗⽬录
+#### ==doFirst() doLast()== 和普通代码段的区别：
+- 普通代码段：在 task 创建过程中就会被执⾏，发⽣在 configuration配置阶段
+- doFirst() 和 doLast()：在 task 执⾏过程中被执⾏，发⽣在 execution执行 阶段。如果⽤户没有
+直接或间接执⾏ task，那么它的 doLast() doFirst() 代码不会被执⾏
+- doFirst() 和 doLast() 都是 task 代码，其中 doFirst() 是往队列的前⾯插⼊代码，doLast()
+是往队列的后⾯插⼊代码
+- task 的依赖：可以使⽤ task ==taskA(dependsOn: b)== 的形式来指定依赖。指定依赖后，==b在taskA之前执行==。
+    ```
+    //普通代码 configuration阶段执行
+    println('before')
+    task clean(type: Delete) {
+        //普通代码configuration阶段执行
+        println('before')
+        //任务代码 execution阶段执行
+        delete rootProject.buildDir
+        //普通代码configuration阶段执行
+        println('after')
+    }
+    ```
+> 可以用于==读取配置文件==中的信息,==自动提交脚本==
+
+#### gradle 执⾏的==⽣命周期==
+- ==三个阶段==：
+    - 1.初始化阶段：执⾏ settings.gradle，确定主 project 和⼦ project
+    - 2.定义阶段：执⾏每个 project 的 bulid.gradle，确定出所有 task 所组成的有向⽆环图
+    - 3.执⾏阶段：按照上⼀阶段所确定出的有向⽆环图来执⾏指定的 task
+- 在阶段之间插⼊代码：
+    - ⼀⼆阶段之间：
+settings.gradle 的最后
+    - ⼆三阶段之间：
+```
+        //最外层的build.gralde
+        //afterEvaluate是在有向无环图画完之后执行
+        afterEvaluate {
+                 插⼊代码
+                }
+```
+### Gradle Plugin
+- Groovy
+> 单引号是不带转义的，⽽双引号内的内容可以使⽤ "string1${var}string2"的⽅式来转义
+
+#### Gradle Plugin
+- 本质：把逻辑独⽴的代码抽取和封装
+
+##### Plugin 的最基本写法
+> 写在 build.gradle ⾥
+
+```
+class PluginDemo implements Plugin<Project> {
+ @Override
+ void apply(Project target) {
+ println 'Hello author!'
+ }
+}
+apply plugin: PluginDemo
+```
+##### ==Plugin 通用做法==
+- 与app同级，新建模块buildSrc
+- main下面新建resources/groovy两个目录
+- resources/META-INF/gradle-plugins/*.properties 中的 * 是插件的名称，例如
+*.properties 是 plugin.properties ，最终在应⽤插件是的代码就
+应该是：
+
+```
+apply plugin: 'plugin'
+```
+- *.properties 中只有⼀⾏，格式是：
+
+```
+implementation-class=com.plugin_demo.DemoPlugin
+```
+- groovy下面新建 PluginDemo.groovy
+
+```
+public class pluginDemo implements Plugin<Project> {
+    @Override
+    public void apply(Project project) {
+        //name是在build.gradle中可以用的配置名称
+        def extension = project.extensions.create("name",Extension)
+        //project.afterEvaluate 等待有向无环图枸建完成再执行，否则无值
+        project.afterEvaluate {
+            println(" hello ${extension.name}")
+        }
+    }
+}
+```
+- groovy下面新建 Extension
+.groovy
+
+```
+public class Extension {
+    String name = "";
+}
+```
+- build.gradle中
+
+```
+apply plugin: 'plugin'
+
+name{
+    name 'mingzi'
+}
+
+```
